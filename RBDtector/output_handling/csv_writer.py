@@ -181,9 +181,15 @@ def create_result_df(calculated_data, signal_names, subject_name, amplitudes_and
         multiindex.get_level_values(0).map(lambda x: HUMAN_RATING_LABEL.get(x, x)) + '_' + multiindex.get_level_values(1)])
 
     # create result df
-    df_out = pd.DataFrame(index=multiindex) \
-        .append([table_header1, table_header2, table_header3, table_header4, table_header5]) \
-        .reindex(new_order, level=0)
+    #df_out = pd.DataFrame(index=multiindex) \
+    #    .append([table_header1, table_header2, table_header3, table_header4, table_header5]) \
+    #    .reindex(new_order, level=0)
+    df_out = pd.concat(
+        [pd.DataFrame(index=multiindex),
+         pd.DataFrame([table_header1, table_header2, table_header3, table_header4, table_header5])],
+        ignore_index=False
+    ).reindex(new_order, level=0)
+
 
     # fill in results
     idx = pd.IndexSlice
@@ -283,9 +289,23 @@ def write_exact_events_csv(calculated_data, output_path, signal_names):
             rbdtector_events.extend(
                 list(zip(start_times, end_times, [HUMAN_RATING_LABEL.get(signal, signal) + EVENT_TYPE[cat]] * len(start_times))))
     rbdtector_events.sort(key=(lambda tpl: tpl[0]))
+
+    rbdtector_events_mod = transform_events(rbdtector_events)
+
     with open(
             os.path.normpath(os.path.join(output_path, 'RBDtection_Events_{}.csv'.format(os.path.basename(output_path)))),
             'w'
     ) as csvfile:
         csv_writer = csv.writer(csvfile)
-        csv_writer.writerows(rbdtector_events)
+        csv_writer.writerows(rbdtector_events_mod)
+
+#Steve's fix of very annoying output bug.
+def transform_events(events, default_duration=30):
+    transformed = []
+    for start, end, label in events:
+        if end is not None:
+            duration = (end - start).total_seconds()
+        else:
+            duration = default_duration
+        transformed.append((start, duration, label))
+    return transformed

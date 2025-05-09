@@ -17,4 +17,4 @@ class RawDataChannel:
         return pd.Series(self._signal)
 
     def get_sample_rate(self):
-        return self._signal_header['sample_rate']
+        return self._signal_header['sample_frequency']

@@ -232,7 +232,7 @@ def __read_sleep_profile(filename: str, encoding: str = 'utf-8') -> Tuple[Dict[s
                 current_date = start_date + datetime.timedelta(days=1)
                 date_change_occurred = True
 
-            current_date_time = pd.to_datetime(str(current_date) + ' ' + time, infer_datetime_format=True)
+            current_date_time = pd.to_datetime(str(current_date) + ' ' + time)
 
             timestamps.append(current_date_time)
             sleep_events.append(sleep_event.strip())
@@ -325,11 +325,11 @@ def __read_baseline(filename: str, start_date: datetime.date, recording_start_af
                                     after_midnight = 1
 
                                 value[i] = pd.to_datetime(str(start_date + datetime.timedelta(days=after_midnight))
-                                                          + ' ' + time_string, infer_datetime_format=True)
+                                                          + ' ' + time_string)
 
                             else:
                                 value[i] = pd.to_datetime(str(start_date + datetime.timedelta(days=0))
-                                                          + ' ' + time_string, infer_datetime_format=True)
+                                                          + ' ' + time_string)
 
                         baseline_dict[key] = value
 
@@ -443,16 +443,16 @@ def __read_annotation_body(annotation_body_in_lines, event_name_split_index, sta
                 end_after_midnight = 1
 
             onset_timestamp = pd.to_datetime(str(start_date + datetime.timedelta(days=onset_after_midnight))
-                                             + ' ' + event_onset, infer_datetime_format=True)
+                                             + ' ' + event_onset)
             end_timestamp = pd.to_datetime(str(start_date + datetime.timedelta(days=end_after_midnight))
-                                           + ' ' + event_end_time, infer_datetime_format=True)
+                                           + ' ' + event_end_time)
 
         else:  # if recording_start_after_midnight
 
             onset_timestamp = pd.to_datetime(str(start_date + datetime.timedelta(days=0))
-                                             + ' ' + event_onset, infer_datetime_format=True)
+                                             + ' ' + event_onset)
             end_timestamp = pd.to_datetime(str(start_date + datetime.timedelta(days=0))
-                                           + ' ' + event_end_time, infer_datetime_format=True)
+                                           + ' ' + event_end_time)
 
         event_onsets.append(onset_timestamp)
         event_end_times.append(end_timestamp)

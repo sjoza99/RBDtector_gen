@@ -108,7 +108,7 @@ class PSG:
         df = pd.DataFrame(index=idx)
 
         artifact_in_3s_miniepoch = artifact_signal_series \
-            .resample('3s') \
+            .resample('3s', origin='start') \
             .sum() \
             .gt(0)
         df['miniepoch_contains_artifact'] = artifact_in_3s_miniepoch
@@ -117,7 +117,7 @@ class PSG:
 
         # find all 30s epochs of global artifact-free REM sleep for tonic event detection
         artifact_in_30s_epoch = artifact_signal_series \
-            .resample('30s') \
+            .resample('30s', origin='start') \
             .sum() \
             .gt(0)
         df['epoch_contains_artifact'] = artifact_in_30s_epoch
@@ -249,7 +249,7 @@ class PSG:
 
                 # detect baseline artifacts
                 baseline_artifact = df_signals.loc[is_rem_series, signal_name].pow(2) \
-                    .rolling(str(baseline_artifact_window_in_s) + 'S',
+                    .rolling(str(baseline_artifact_window_in_s) + 's',
                              min_periods=settings.RATE * baseline_artifact_window_in_s) \
                     .mean() \
                     .apply(np.sqrt) \
@@ -273,7 +273,7 @@ class PSG:
 
                         # find baseline
                         baseline_in_rolling_window = artifact_free_rem_block.pow(2)\
-                            .rolling(str(baseline_time_window_in_s) + 'S',
+                            .rolling(str(baseline_time_window_in_s) + 's',
                                      min_periods=settings.RATE * baseline_time_window_in_s)\
                             .mean() \
                             .apply(np.sqrt)
@@ -630,7 +630,7 @@ class PSG:
             diff_signal = \
                 new_sustained_activity.astype(int) \
                 + max_tolerable_gaps.astype(int) * 3
-            relevant_diffs = diff_signal.diff().replace(to_replace=0, method='ffill').eq(2).fillna(0).astype(bool)
+            relevant_diffs = diff_signal.diff().mask(lambda x: x == 0).ffill().eq(2).fillna(0).astype(bool)
             new_sustained_activity = new_sustained_activity | relevant_diffs
 
             # add gaps < 0.25s to sustained activity periods if they lie directly to the left of a new
@@ -638,7 +638,7 @@ class PSG:
             diff_signal = \
                 new_sustained_activity.astype(int) \
                 + max_tolerable_gaps.astype(int) * 3
-            relevant_diffs = diff_signal.diff(-1).replace(to_replace=0, method='bfill').eq(2).fillna(0).astype(bool)
+            relevant_diffs = diff_signal.diff(-1).mask(lambda x: x == 0).bfill().eq(2).fillna(0).astype(bool)
             new_sustained_activity = new_sustained_activity | relevant_diffs
 
             # add activity to sustained activity periods if they lie directly to the right of a new
@@ -647,7 +647,7 @@ class PSG:
             diff_signal = \
                 new_sustained_activity.astype(int) \
                 + non_sustained_activity.astype(int) * 3
-            relevant_diffs = diff_signal.diff().replace(to_replace=0, method='ffill').eq(2).fillna(0).astype(bool)
+            relevant_diffs = diff_signal.diff().mask(lambda x: x == 0).ffill().eq(2).fillna(0).astype(bool)
             new_sustained_activity = new_sustained_activity | relevant_diffs
 
             # add activity to sustained activity periods if they lie directly to the left of a new
@@ -656,11 +656,9 @@ class PSG:
             diff_signal = \
                 new_sustained_activity.astype(int) \
                 + non_sustained_activity.astype(int) * 3
-            relevant_diffs = diff_signal.diff(-1).replace(to_replace=0, method='bfill').eq(2).fillna(0).astype(bool)
+            relevant_diffs = diff_signal.diff(-1).mask(lambda x: x == 0).bfill().eq(2).fillna(0).astype(bool)
             new_sustained_activity = new_sustained_activity | relevant_diffs
 
-            # df[signal_type + '_new_sustained_activity'] = new_sustained_activity
-            # df['diffs'] = relevant_diffs
         df[signal_type + '_sustained_activity'] = sustained_activity
         return df
 
